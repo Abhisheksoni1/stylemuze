@@ -1,0 +1,39 @@
+import json
+
+from django.http import JsonResponse, Http404
+from django.utils import timezone
+
+from stylemuzeapp.models import *
+from stylemuzeapp.error_codes import ERROR_CODES
+
+def _create_user(user_facebook_id):
+	user = User(facebook_id=user_facebook_id, gender=True, first_name='', 
+			last_name='', date_registered=timezone.now(), last_login=timezone.now())
+	user.save()
+
+def __create_json_dict(error_code, **kwargs):
+	send_dict = {"error_code" : error_code}
+	send_dict.update(kwargs)
+	return send_dict
+
+def login(request):
+	try:
+		user = User.objects.get(facebook_id=request.GET["facebook_id"])
+	except KeyError:
+		raise Http404("No facebook ID")
+	except User.DoesNotExist:
+		return JsonResponse(__create_json_dict(ERROR_CODES.EC_USER_NOT_EXISTS))
+
+	return JsonResponse(__create_json_dict(ERROR_CODES.EC_SUCCESS))
+
+def register(request):
+	try:
+		facebook_id = User.objects.get(facebook_id=request.GET["facebook_id"])
+		user = User.objects.get(facebook_id=facebook_id)
+	except KeyError:
+		raise Http404("No facebook ID")
+	except User.DoesNotExist:
+		_create_user(facebook_id)
+		return JsonResponse(__create_json_dict(ERROR_CODES.EC_SUCCESS))
+	else:
+		return JsonResponse(__create_json_dict(ERROR_CODES.EC_USER_ALREADY_EXISTS))

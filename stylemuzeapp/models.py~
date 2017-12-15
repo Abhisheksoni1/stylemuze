@@ -1,0 +1,58 @@
+from __future__ import unicode_literals
+
+from django.db import models
+
+class User(models.Model):
+	profile_pic_url = models.CharField(max_length=1000, null=True)
+	website = models.CharField(max_length=1000, null=True)
+	email = models.CharField(max_length=1000, null=True)
+	gender = models.BooleanField()
+	first_name = models.CharField(max_length=50)
+	last_name = models.CharField(max_length=50)
+	facebook_id = models.CharField(max_length=128)
+	date_registered = models.DateTimeField('date registered')
+	last_login = models.DateTimeField('last login time')
+
+class Brand(models.Model):
+	logo_pic_url = models.CharField(max_length=1000)
+	name = models.CharField(max_length=200)
+
+class PhotoItem(models.Model):
+	is_bff_item = models.BooleanField()
+	time_created = models.DateTimeField('date published')
+	title = models.CharField(max_length=500)
+	photo_url = models.CharField(max_length=1000)
+	user_created = models.ForeignKey(User, on_delete=models.CASCADE)
+	brand_assosiated = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True)
+
+class Follow(models.Model):
+	follower_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_user_requested')
+	following_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_user_being_followed')
+
+class BffState(models.Model):
+	state_name = models.CharField(max_length=10)
+	state_num = models.IntegerField()
+
+class Bff(models.Model):
+	follower_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_user_requested')
+	following_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_user_being_bffed')
+	state = models.ForeignKey(BffState, on_delete=models.SET_NULL, null=True)
+
+class Like(models.Model):
+	item = models.ForeignKey(PhotoItem, on_delete=models.CASCADE)
+	from_user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class Comment(models.Model):
+	item = models.ForeignKey(PhotoItem, on_delete=models.CASCADE)
+	from_user = models.ForeignKey(User, on_delete=models.CASCADE)
+	comment = models.TextField()
+
+class VoteOption(models.Model):
+	vote_name = models.CharField(max_length=10)
+	vote_num = models.IntegerField()
+
+class Vote(models.Model):
+	item = models.ForeignKey(PhotoItem, on_delete=models.CASCADE)
+	from_user = models.ForeignKey(User, on_delete=models.CASCADE)
+	vote = models.ForeignKey(VoteOption, on_delete=models.SET_NULL, null=True)
+	
